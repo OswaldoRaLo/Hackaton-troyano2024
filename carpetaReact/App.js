@@ -2,12 +2,13 @@ import * as React from 'react';
 import { Button, View, Text, TextInput, ImageBackground, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { get_mensajes, get_puertos, get_usuarios } from './api';
+import axios from 'axios';
+import MapView, { Marker } from 'react-native-maps';
 
 const styles = StyleSheet.create({
   input: {
-    height: 40, 
-    width: '80%', 
+    height: 40, // Ajusta esto para cambiar la altura
+    width: '80%', // Ajusta esto para cambiar el ancho
     margin: 12,
     borderWidth: 1,
     padding: 10,
@@ -50,42 +51,44 @@ function LoginScreen({ navigation }) {
 }
 
 function HomeScreen({ navigation }) {
-  const [mensajes, setMensajes] = useState([]);
-  const [puertos, setPuertos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
+  const [points, setPoints] = React.useState([]);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const mensajes = await get_mensajes();
-        const puertos = await get_puertos();
-        const usuarios = await get_usuarios();
-        setMensajes(mensajes);
-        setPuertos(puertos);
-        setUsuarios(usuarios);
-      } catch (error) {
-        console.error('Error al obtener datos de api.py:', error);
-      }
-    }
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const result = await axios.post('http://127.0.0.1:5000', {
+        lat1: 40.7128,
+        lon1: -74.0060,
+        lat2: 34.0522,
+        lon2: -118.2437,
+        num_points: 10 
+        
+      });
+
+      setPoints(result.data);
+    };
+
     fetchData();
   }, []);
 
-  // Muestra los datos en la pantalla
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text>Home Screen</Text>
-      <Text>Mensajes:</Text>
-      {mensajes.map((mensaje, index) => (
-        <Text key={index}>{JSON.stringify(mensaje)}</Text>
-      ))}
-      <Text>Puertos:</Text>
-      {puertos.map((puerto, index) => (
-        <Text key={index}>{JSON.stringify(puerto)}</Text>
-      ))}
-      <Text>Usuarios:</Text>
-      {usuarios.map((usuario, index) => (
-        <Text key={index}>{JSON.stringify(usuario)}</Text>
-      ))}
+      <MapView style={{ width: '100%', height: '80%' }}>
+        {points.map((point, index) => (
+          <Marker
+            key={index}
+            coordinate={{ latitude: point[0], longitude: point[1] }}
+          />
+        ))}
+      </MapView>
+    </View>
+  );
+}
+
+function DetailsScreen({ navigation }) {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Text>Details Screen</Text>
     </View>
   );
 }
@@ -104,4 +107,3 @@ function App() {
 }
 
 export default App;
-
